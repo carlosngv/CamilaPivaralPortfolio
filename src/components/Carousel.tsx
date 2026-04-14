@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 
 function ChevLeft() {
   return (
@@ -16,6 +17,15 @@ function ChevRight() {
   )
 }
 
+function XIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  )
+}
+
 interface CarouselProps {
   images: string[]
   name: string
@@ -27,13 +37,47 @@ export default function Carousel({ images, name, autoPlay = false, interval = 35
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
   const [restartKey, setRestartKey] = useState(0)
+  const [lightbox, setLightbox] = useState<number | null>(null)
   const touchStart = useRef(0)
+  const lbTouchStart = useRef(0)
 
   const resetTimer = () => setRestartKey((k) => k + 1)
 
   const prev = () => { setCurrent((i) => (i - 1 + images.length) % images.length); resetTimer() }
   const next = () => { setCurrent((i) => (i + 1) % images.length); resetTimer() }
   const goTo = (i: number) => { setCurrent(i); resetTimer() }
+
+  // Lightbox navigation
+  const lbPrev = useCallback(() => setLightbox((i) => i === null ? null : (i - 1 + images.length) % images.length), [images.length])
+  const lbNext = useCallback(() => setLightbox((i) => i === null ? null : (i + 1) % images.length), [images.length])
+  const lbClose = useCallback(() => setLightbox(null), [])
+
+  // Escape key closes lightbox
+  useEffect(() => {
+    if (lightbox === null) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') lbClose()
+      if (e.key === 'ArrowLeft') lbPrev()
+      if (e.key === 'ArrowRight') lbNext()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lightbox, lbClose, lbPrev, lbNext])
+
+  // Body scroll lock when lightbox is open
+  useEffect(() => {
+    if (lightbox === null) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [lightbox])
+
+  // Lightbox touch handlers
+  const handleLbTouchStart = (e: React.TouchEvent) => { lbTouchStart.current = e.touches[0].clientX }
+  const handleLbTouchEnd = (e: React.TouchEvent) => {
+    const diff = lbTouchStart.current - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 48) diff > 0 ? lbNext() : lbPrev()
+  }
 
   // Auto-advance
   useEffect(() => {
@@ -48,13 +92,49 @@ export default function Carousel({ images, name, autoPlay = false, interval = 35
     if (Math.abs(diff) > 48) diff > 0 ? next() : prev()
   }
 
+  // Lightbox portal
+  const lightboxPortal = lightbox !== null && createPortal(
+    <div
+      className="lightbox-overlay"
+      onClick={lbClose}
+      onTouchStart={handleLbTouchStart}
+      onTouchEnd={handleLbTouchEnd}
+    >
+      <img
+        className="lightbox-img"
+        src={`/assets/${images[lightbox]}`}
+        alt={`${name} — ${lightbox + 1} / ${images.length}`}
+        onClick={(e) => e.stopPropagation()}
+        draggable={false}
+      />
+      <button className="lightbox-close" onClick={lbClose} aria-label="Cerrar">
+        <XIcon />
+      </button>
+      {images.length > 1 && (
+        <>
+          <button className="lightbox-nav lightbox-nav--prev" onClick={(e) => { e.stopPropagation(); lbPrev() }} aria-label="Imagen anterior">
+            <ChevLeft />
+          </button>
+          <button className="lightbox-nav lightbox-nav--next" onClick={(e) => { e.stopPropagation(); lbNext() }} aria-label="Siguiente imagen">
+            <ChevRight />
+          </button>
+          <span className="lightbox-counter">
+            {String(lightbox + 1).padStart(2, '0')} / {String(images.length).padStart(2, '0')}
+          </span>
+        </>
+      )}
+    </div>,
+    document.body,
+  )
+
   // Single image — no controls
   if (images.length === 1) {
     return (
       <div className="carousel">
         <div className="carousel-frame">
-          <img src={`/assets/${images[0]}`} alt={name} loading="lazy" />
+          <img src={`/assets/${images[0]}`} alt={name} loading="lazy" onClick={() => setLightbox(0)} />
         </div>
+        {lightboxPortal}
       </div>
     )
   }
@@ -81,6 +161,7 @@ export default function Carousel({ images, name, autoPlay = false, interval = 35
                 src={`/assets/${src}`}
                 alt={`${name} — ${i + 1} / ${images.length}`}
                 loading={i === 0 ? 'eager' : 'lazy'}
+                onClick={() => setLightbox(i)}
               />
             </div>
           ))}
@@ -123,6 +204,8 @@ export default function Carousel({ images, name, autoPlay = false, interval = 35
           <ChevRight />
         </button>
       </div>
+
+      {lightboxPortal}
     </div>
   )
 }

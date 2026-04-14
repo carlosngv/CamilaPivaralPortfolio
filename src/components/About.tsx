@@ -29,9 +29,12 @@ export default function About({ lang }: AboutProps) {
 
       {/* ── Quote ── */}
       <div className="about-quote-block reveal">
-        {copy.quote.split('\n').map((line, i) => (
-          <span key={i} className="about-quote-line">{line}</span>
-        ))}
+        <div className="about-quote-text">
+          {copy.quote.split('\n').map((line, i) => (
+            <span key={i} className="about-quote-line">{line}</span>
+          ))}
+        </div>
+        <img src="/assets/me.png" alt="Camila" className="about-profile-img" />
       </div>
 
       {/* ── Experience ── */}

@@ -9,16 +9,17 @@ interface HeroProps {
 export default function Hero({ lang }: HeroProps) {
   const copy = t[lang].hero
 
-  const labelRef  = useRef<HTMLSpanElement>(null)
-  const titleRef  = useRef<HTMLHeadingElement>(null)
-  const roleRef   = useRef<HTMLParagraphElement>(null)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const labelRef   = useRef<HTMLSpanElement>(null)
+  const nameRef    = useRef<HTMLHeadingElement>(null)
+  const rightRef   = useRef<HTMLDivElement>(null)
+  const scrollRef  = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const els = [labelRef.current, titleRef.current, roleRef.current, scrollRef.current]
-    // Small delay so the transition plays on mount
     const timer = setTimeout(() => {
-      els.forEach((el) => el?.classList.add('visible'))
+      labelRef.current?.classList.add('visible')
+      nameRef.current?.classList.add('visible')
+      rightRef.current?.classList.add('visible')
+      scrollRef.current?.classList.add('visible')
     }, 80)
     return () => clearTimeout(timer)
   }, [])
@@ -27,13 +28,25 @@ export default function Hero({ lang }: HeroProps) {
     <header className="hero">
       <div className="hero-content">
         <span ref={labelRef} className="hero-label">{copy.label}</span>
-        <h1 ref={titleRef} className="hero-title">
-          {copy.title1}{' '}
-          <em>{copy.titleAccent}</em>
-          <br />
-          {copy.title2}
-        </h1>
-        <p ref={roleRef} className="hero-role">{copy.role}</p>
+
+        <div className="hero-main">
+          {/* Left — name */}
+          <h1 ref={nameRef} className="hero-name">
+            {copy.name.split('\n').map((line, i) => (
+              <span key={i} className="hero-name-line">{line}</span>
+            ))}
+          </h1>
+
+          {/* Right — statement + role + bio */}
+          <div ref={rightRef} className="hero-right">
+            <p className="hero-tagline">
+              {copy.tagline1} <em>{copy.taglineAccent}</em><br />
+              {copy.tagline2}
+            </p>
+            <p className="hero-role">{copy.role}</p>
+            <p className="hero-bio">{copy.bio}</p>
+          </div>
+        </div>
       </div>
 
       <div ref={scrollRef} className="hero-scroll" aria-hidden="true">

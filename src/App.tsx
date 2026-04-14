@@ -3,7 +3,8 @@ import type { Lang } from './translations'
 import Cursor from './components/Cursor'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
-import Work from './components/Work'
+import Projects from './components/Projects'
+import About from './components/About'
 import Footer from './components/Footer'
 import './App.css'
 
@@ -42,7 +43,8 @@ export default function App() {
       <Nav lang={lang} theme={theme} onToggleLang={toggleLang} onToggleTheme={toggleTheme} />
       <main>
         <Hero lang={lang} />
-        <Work lang={lang} />
+        <About lang={lang} />
+        <Projects lang={lang} />
       </main>
       <Footer lang={lang} />
     </>

@@ -41,6 +41,7 @@ export default function Nav({ lang, theme, onToggleLang, onToggleTheme }: NavPro
         <div className="nav-right">
           <div className="nav-links">
             <a href="#work"    className="nav-link" onClick={(e) => scrollTo(e, 'work')}>{copy.work}</a>
+            <a href="#about"   className="nav-link" onClick={(e) => scrollTo(e, 'about')}>{copy.about}</a>
             <a href="#contact" className="nav-link" onClick={(e) => scrollTo(e, 'contact')}>{copy.contact}</a>
           </div>
 
